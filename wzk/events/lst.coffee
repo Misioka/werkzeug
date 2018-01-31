@@ -43,12 +43,11 @@ wzk.events.lst.onChangeOrKeyUp = (field, listener, timeout = 500) ->
 
 
 ###*
-  Fires a given listener `onclick` event or when Enter is pressed.
+  Fires a given listener when Enter is pressed.
   @param {Element} field
   @param {function(goog.events.Event)} listener
 ###
-wzk.events.lst.onClickOrEnter = (field, listener) ->
-  goog.events.listen(field, goog.events.EventType.CLICK, listener)
+wzk.events.lst.onEnter = (field, listener) ->
   goog.events.listen(field, goog.events.EventType.KEYPRESS, (e) ->
     if e.keyCode is goog.events.KeyCodes.ENTER
       listener(e)
