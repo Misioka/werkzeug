@@ -27,9 +27,9 @@ class wzk.ui.ac.ExtSelectbox extends goog.events.EventTarget
     @param {wzk.dom.Dom} dom
     @param {goog.ui.ac.Renderer} renderer
     @param {Object} customRenderer
-    @param {wzk.ui.ac.ExtSelectboxStorageHandler=} handler
+    @param {wzk.ui.ac.ExtSelectboxStorageHandler} handler
   ###
-  constructor: (@dom, @renderer, @customRenderer, @handler = null) ->
+  constructor: (@dom, @renderer, @customRenderer, @handler, @xhrFac = null) ->
     super()
     @cont = new wzk.ui.TagContainer null, null, @dom
     @input = new wzk.ui.ClearableInput(dom)
@@ -49,6 +49,7 @@ class wzk.ui.ac.ExtSelectbox extends goog.events.EventTarget
     @autoComplete = null
     @matcher = null
     @enabled = true
+    @select = null
 
   ###*
     @param {HTMLSelectElement} select
@@ -67,6 +68,7 @@ class wzk.ui.ac.ExtSelectbox extends goog.events.EventTarget
     @param {Array} data
   ###
   render: (selectbox, @data) ->
+    @select = selectbox
     @matcher = new wzk.ui.ac.ArrayMatcher(@data, false)
     @autoComplete = new wzk.ui.ac.AutoComplete(@matcher, @renderer, @inputHandler)
     @hideOriginSelect(selectbox)
@@ -143,7 +145,31 @@ class wzk.ui.ac.ExtSelectbox extends goog.events.EventTarget
   ###
   handleOpen: =>
     @input.getElement().focus()
-    @autoComplete.renderRows(@data)
+    loadData = goog.dom.dataset.get @select, 'filter'
+    if loadData? && @xhrFac
+      xhr = @xhrFac.build new wzk.net.XhrConfig()
+
+      goog.events.listenOnce xhr, goog.net.EventType.SUCCESS, =>
+        responseIds = xhr.getResponseJson()
+        for row in @data
+          if responseIds.indexOf(parseInt(row.id, 10)) == -1
+            row.style.display = 'none'
+          else
+            row.style.display = 'block'
+        @autoComplete.renderRows(@data)
+      formData = wzk.ui.form.form2Json(@dom.one 'form')
+      formData['passengers'] = @dom.all('.field-value.passengers .tag').length
+      pickup = @dom.all('[id$="job_pickup"]')[0]
+      dropoff = @dom.all('[id$="job_dropoff"]')[0]
+      for key in Object.keys(formData)
+        k = key.split('-')
+        formData[k[k.length - 1]] = formData[key]
+      if pickup?
+        formData['pickup'] = goog.dom.dataset.get pickup, 'position'
+        formData['dropoff'] = goog.dom.dataset.get dropoff, 'position'
+      xhr.send loadData, 'POST', [JSON.stringify formData ], {'Content-Type': 'application/json'}
+    else
+      @autoComplete.renderRows(@data)
 
   ###*
     @protected

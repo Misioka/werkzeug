@@ -142,13 +142,13 @@ class wzk.app.App
     @on 'fieldset.inline-js', (el, dom, xhrFac, opts) ->
       wzk.ui.inlineform.buildDynamicButton el, dom, opts.app.getRegister()
 
-    @on 'select.fulltext-search', (el, dom) ->
+    @on 'select.fulltext-search', (el, dom, xhrFac) ->
       el = (`/** @type {HTMLSelectElement} */`) el
-      wzk.ui.ac.buildSelectAutoCompleteNative el, dom
+      wzk.ui.ac.buildSelectAutoCompleteNative el, dom, xhrFac
 
-    @on 'select.fulltext-search-multiple', (el, dom) ->
+    @on 'select.fulltext-search-multiple', (el, dom, xhrFac) ->
       el = (`/** @type {HTMLSelectElement} */`) el
-      wzk.ui.ac.buildExtSelectboxFromSelectNative el, dom
+      wzk.ui.ac.buildExtSelectboxFromSelectNative el, dom, xhrFac
 
     @on '*[data-title]', (el, dom) ->
       wzk.ui.tooltip.tooltipy el, dom

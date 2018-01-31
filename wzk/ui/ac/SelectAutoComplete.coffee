@@ -1,4 +1,5 @@
 goog.require 'goog.events.EventTarget'
+goog.require 'goog.style'
 
 goog.require 'wzk.ui.ac.InputHandler'
 goog.require 'wzk.ui.ac.PictureCustomRenderer'
@@ -6,6 +7,7 @@ goog.require 'wzk.ui.ac.ArrayMatcher'
 goog.require 'wzk.ui.ac.AutoComplete'
 goog.require 'wzk.ui.ac.SelectOneStorage'
 goog.require 'wzk.dom.Dom'
+goog.require 'wzk.net.XhrConfig'
 
 
 class wzk.ui.ac.SelectAutoComplete extends goog.events.EventTarget
@@ -13,6 +15,7 @@ class wzk.ui.ac.SelectAutoComplete extends goog.events.EventTarget
   @DATA =
     CHOOSE_VALUE: 'chooseValue'
     CHOOSE_LABEL: 'chooseLabel'
+    DEP_CHILD: 'child'
 
   ###*
     @enum {string}
@@ -26,7 +29,7 @@ class wzk.ui.ac.SelectAutoComplete extends goog.events.EventTarget
     @param {wzk.dom.Dom} dom
     @param {wzk.ui.ac.Renderer} renderer
   ###
-  constructor: (@dom, @renderer) ->
+  constructor: (@dom, @renderer, @xhrFac = null) ->
     super()
     @select = null
     @handler = null
@@ -96,6 +99,10 @@ class wzk.ui.ac.SelectAutoComplete extends goog.events.EventTarget
     @protected
   ###
   handleClean: =>
+    childrenId = goog.dom.dataset.get @select, wzk.ui.ac.SelectAutoComplete.DATA.DEP_CHILD
+    childSelect =  @dom.all '#' + childrenId + ' option'
+    for el in childSelect
+      goog.style.setElementShown(el, true)
     @stor.clean()
     goog.events.fireListeners(@select, goog.events.EventType.CHANGE, false, {type: goog.events.EventType.CHANGE, target: @select})
 
@@ -104,7 +111,32 @@ class wzk.ui.ac.SelectAutoComplete extends goog.events.EventTarget
    ###
   handleOpen: =>
     @renderer.getInput().getElement().focus()
-    @ac.renderRows(@data)
+    loadData = goog.dom.dataset.get @select, 'filter'
+    if loadData? && @xhrFac
+      xhr = @xhrFac.build new wzk.net.XhrConfig()
+
+      goog.events.listenOnce xhr, goog.net.EventType.SUCCESS, =>
+        responseIds = xhr.getResponseJson()
+        for row in @data
+          if responseIds.indexOf(parseInt(row.id, 10)) == -1
+            row.style.display = 'none'
+          else
+            row.style.display = 'block'
+        @ac.renderRows(@data)
+      formData = wzk.ui.form.form2Json(@dom.one 'form')
+      formData['passengers'] = @dom.all('.field-value.passengers .tag').length
+      pickup = @dom.all('[id$="job_pickup"]')[0]
+      dropoff = @dom.all('[id$="job_dropoff"]')[0]
+      for key in Object.keys(formData)
+        k = key.split('-')
+        formData[k[k.length - 1]] = formData[key]
+      if pickup?
+        formData['pickup'] = goog.dom.dataset.get pickup, 'position'
+        formData['dropoff'] = goog.dom.dataset.get dropoff, 'position'
+      console.log formData
+      xhr.send loadData, 'POST', [JSON.stringify formData ], {'Content-Type': 'application/json'}
+    else
+      @ac.renderRows(@data)
 
   ###*
     @param {Array} data
@@ -129,6 +161,14 @@ class wzk.ui.ac.SelectAutoComplete extends goog.events.EventTarget
     @param {goog.events.Event} e
   ###
   handleUpdate: (e) =>
+    childrenId = goog.dom.dataset.get(@select, wzk.ui.ac.SelectAutoComplete.DATA.DEP_CHILD)
+    childSelect =  @dom.all '#' + childrenId + ' option'
+    for el in childSelect
+      parentId = goog.dom.dataset.get(el, 'parent')
+      if parentId != e.row.id
+        goog.style.setElementShown(el, false)
+      else
+        goog.style.setElementShown(el, true)
     @stor.store e.row
     @afterSelect e.row
 

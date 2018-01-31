@@ -18,8 +18,8 @@ goog.require 'wzk.ui.ac.InputAutoComplete'
   @param {wzk.dom.Dom} dom
   @return {wzk.ui.ac.SelectAutoComplete}
 ###
-wzk.ui.ac.buildSelectAutoCompleteNative = (select, dom) ->
-  ac = wzk.ui.ac.buildSelectAutocompleteInternal select, dom
+wzk.ui.ac.buildSelectAutoCompleteNative = (select, dom, xhrFac) ->
+  ac = wzk.ui.ac.buildSelectAutocompleteInternal select, dom, xhrFac
   dataProvider = new wzk.ui.ac.NativeDataProvider()
   dataProvider.load select, dom, (data) ->
     ac.load(data)
@@ -46,8 +46,8 @@ wzk.ui.ac.buildSelectAutoCompleteRest = (el, dom, api, tokenName, limit, tokenMi
   @param {HTMLSelectElement} select
   @param {wzk.dom.Dom} dom
 ###
-wzk.ui.ac.buildExtSelectboxFromSelectNative = (select, dom) ->
-  selectbox = wzk.ui.ac.buildExtSelectboxFromSelectInternal select, dom
+wzk.ui.ac.buildExtSelectboxFromSelectNative = (select, dom, xhrFac) ->
+  selectbox = wzk.ui.ac.buildExtSelectboxFromSelectInternal select, dom, xhrFac
 
   dataProvider = new wzk.ui.ac.NativeDataProvider()
   dataProvider.load select, dom, (data) ->
@@ -59,7 +59,7 @@ wzk.ui.ac.buildExtSelectboxFromSelectNative = (select, dom) ->
   @param {wzk.net.XhrFactory} xhrFac
 ###
 wzk.ui.ac.buildExtSelectboxFromSelectRest = (select, dom, xhrFac) ->
-  selectbox = wzk.ui.ac.buildExtSelectboxFromSelectInternal select, dom
+  selectbox = wzk.ui.ac.buildExtSelectboxFromSelectInternal select, dom, xhrFac
   wzk.ui.ac.buildRestDataProvider select, xhrFac, (data) ->
     selectbox.decorate(select, data)
 
@@ -79,10 +79,10 @@ wzk.ui.ac.buildRestDataProvider = (select, xhrFac, onLoad) ->
   @param {wzk.dom.Dom} dom
   @return {wzk.ui.ac.SelectAutoComplete}
 ###
-wzk.ui.ac.buildSelectAutocompleteInternal = (select, dom) ->
+wzk.ui.ac.buildSelectAutocompleteInternal = (select, dom, xhrFac) ->
   customRenderer = wzk.ui.ac.buildCustomRenderer(select, dom)
   renderer = new wzk.ui.ac.Renderer(dom, null, customRenderer)
-  ac = new wzk.ui.ac.SelectAutoComplete dom, renderer
+  ac = new wzk.ui.ac.SelectAutoComplete dom, renderer, xhrFac
   ac.decorate select
   ac
 
@@ -90,13 +90,13 @@ wzk.ui.ac.buildSelectAutocompleteInternal = (select, dom) ->
   @param {HTMLSelectElement} select
   @param {wzk.dom.Dom} dom
 ###
-wzk.ui.ac.buildExtSelectboxFromSelectInternal = (select, dom) ->
+wzk.ui.ac.buildExtSelectboxFromSelectInternal = (select, dom, xhrFac) ->
   return unless select?
 
   customRenderer = wzk.ui.ac.buildCustomRenderer(select, dom)
   renderer = new wzk.ui.ac.Renderer(dom, null, customRenderer)
   storage = new wzk.ui.ac.ExtSelectboxStorage(dom, select)
-  selectbox = new wzk.ui.ac.ExtSelectbox(dom, renderer, customRenderer, new wzk.ui.ac.ExtSelectboxStorageHandler(select, storage))
+  selectbox = new wzk.ui.ac.ExtSelectbox(dom, renderer, customRenderer, new wzk.ui.ac.ExtSelectboxStorageHandler(select, storage), xhrFac)
   selectbox
 
 ###*
