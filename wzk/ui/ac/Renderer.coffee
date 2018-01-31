@@ -328,6 +328,11 @@ class wzk.ui.ac.Renderer extends goog.ui.ac.Renderer
     goog.a11y.aria.setRole node, goog.a11y.aria.Role.OPTION
 
     goog.dom.dataset.set node, 'value', row['data']['id']
+    if row['data']['parent']?
+      goog.dom.dataset.set node, 'parent', row['data']['parent']
+
+    if row['data']['style']?
+      goog.style.setStyle node, row['data']['style']
 
     if @customRenderer and @customRenderer.renderRow
       @customRenderer.renderRow row, token, node

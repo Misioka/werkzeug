@@ -5,6 +5,7 @@ class wzk.ui.ac.NativeDataProvider
 
   @DATA:
     PHOTO: 'image'
+    PARENT: 'parent'
 
   constructor: ->
 
@@ -57,6 +58,13 @@ class wzk.ui.ac.NativeDataProvider
 
     if group?
       data['group'] = group
+
+    parent = goog.dom.dataset.get option, wzk.ui.ac.NativeDataProvider.DATA.PARENT
+    if parent?
+      data['parent'] = parent
+
+    if option.style?
+      data['style'] = option.style
 
     photo = goog.dom.dataset.get option, wzk.ui.ac.NativeDataProvider.DATA.PHOTO
     if photo? and photo.length > 0
