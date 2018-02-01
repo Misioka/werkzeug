@@ -165,7 +165,7 @@ class wzk.app.App
     @on '.dropdown', (el, dom) ->
       wzk.ui.popup.dropdown(el, dom)
 
-    @on 'input[type=datetime], input.datetime, input.date', (el, dom, _, opts) ->
+    @on 'input.date', (el, dom, _, opts) ->
       wzk.ui.datepicker(el, dom, opts.app.dateFormat.format)
 
   ###*
